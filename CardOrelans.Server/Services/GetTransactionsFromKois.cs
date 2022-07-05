@@ -3,11 +3,11 @@
 namespace CardOrelans.Server.Services
 {
 
-    public interface IGetTransactionsFromKoisGrain : IGrainWithGuidKey
+    public interface IGetTransactionsFromKois
     {
         Task GetTransactions();
     }
-    public class GetTransactionsFromKoisGrain : Grain, IGetTransactionsFromKoisGrain
+    public class GetTransactionsFromKois : IGetTransactionsFromKois
     {
         public Task GetTransactions()
         {

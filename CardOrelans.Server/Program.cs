@@ -1,3 +1,4 @@
+using CardanOrleans.Server;
 using CardOrelans.Server.Services;
 using Orleans;
 using Orleans.Configuration;
@@ -15,9 +16,13 @@ public class Program
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-        builder.Services.AddTransient<IGetTransactionsFromKoisGrain, GetTransactionsFromKoisGrain>();
-        await StartSilo(); 
-        await StartSilo2();
+        builder.Services.AddTransient<IGetTransactionsFromKois, GetTransactionsFromKois>();
+        await StartSilo();
+        builder.Services.AddSingleton<ClusterClientHostedService>();
+        builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<ClusterClientHostedService>());
+        builder.Services.AddSingleton(sp => sp.GetRequiredService<ClusterClientHostedService>().Client);
+        builder.Services.Configure<ConsoleLifetimeOptions>(sp => sp.SuppressStatusMessages = true);
+
 
         var app = builder.Build();
 
@@ -36,45 +41,21 @@ public class Program
 
         app.Run();
     }
-    private static async Task<ISiloHost> StartSilo()
+    private static async Task StartSilo()
     {
         // define the cluster configuration
-        var builder = new SiloHostBuilder()
-            .UseLocalhostClustering()
-            .Configure<ClusterOptions>(options =>
-            {
-                options.ClusterId = "dev";
-                options.ServiceId = "CardanOrleans";
-            })
-             .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-            .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(GetTransactionsFromKoisGrain).Assembly).WithReferences())
-            .ConfigureLogging(logging => logging.AddConsole())
-            .AddMemoryGrainStorage("CardanOrleans");
+        var host = new HostBuilder()
+           .UseOrleans(builder =>
+           {
+               builder.UseLocalhostClustering();
+               builder.AddMemoryGrainStorageAsDefault();
+               })
+            .Build();
 
-        var host = builder.Build();
         await host.StartAsync();
-        return host;
+        Console.WriteLine("The silo has started");
     }
 
-    private static async Task<ISiloHost> StartSilo2()
-    {
-        // define the cluster configuration
-        var builder = new SiloHostBuilder()
-            .UseLocalhostClustering()
-            .Configure<ClusterOptions>(options =>
-            {
-                options.ClusterId = "dev";
-                options.ServiceId = "CardanOrleans";
-            })
-            .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
-            .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(GetTransactionsFromKoisGrain).Assembly).WithReferences())
-            .ConfigureLogging(logging => logging.AddConsole())
-            .AddMemoryGrainStorage("CardanOrleans");
-
-        var host = builder.Build();
-        await host.StartAsync();
-        return host;
-    }
 }
 
 
