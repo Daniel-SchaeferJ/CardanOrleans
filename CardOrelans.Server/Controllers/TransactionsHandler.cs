@@ -1,4 +1,5 @@
 ﻿using CardanOrleans.Server.Orleans;
+using CardanOrleans.Server.Services;
 using Microsoft.AspNetCore.Mvc;
 using Orleans;
 
@@ -9,24 +10,26 @@ namespace CardanOrleans.Server.Controllers
     public class TransactionsHandler : ControllerBase
     {
         private readonly IClusterClient _clusterClient;
-        private readonly ClusterClientHostedService _clusterClientHostedService;
+        private readonly IGetTransactionsFromKois _getTransactionsFromKois;
 
-        public TransactionsHandler(IClusterClient clusterClient, ClusterClientHostedService clusterClientHostedService)
+        public TransactionsHandler(IClusterClient clusterClient, IGetTransactionsFromKois getTransactionsFromKois)
         {
             _clusterClient = clusterClient;
-            _clusterClientHostedService = clusterClientHostedService;
+            _getTransactionsFromKois = getTransactionsFromKois;
         }
 
         [HttpGet("get-transaction")]
         public async Task<IActionResult> Index(string txHash, CancellationToken token)
         {
-            return Ok(await _clusterClient.GetGrain<ITransactionGrain>("yup").GetTransaction(txHash));
-        }
+            var transaction = await _clusterClient.GetGrain<ITransactionGrain>(txHash).GetTransaction();
 
-        [HttpPost("update-transaction")]
-        public async Task<IActionResult> UpdateTransaction(string txHash, CancellationToken token)
-        {
-            return Ok(await _clusterClient.GetGrain<ITransactionGrain>("yup").UpdateTransaction((uint)22222));
+            if (transaction.Epock is 0)
+            {
+                transaction = await _getTransactionsFromKois.GetTransactions(txHash);
+
+                await _clusterClient.GetGrain<ITransactionGrain>(txHash).UpdateTransaction(transaction);
+            }
+            return Ok(transaction);
         }
     }
 }

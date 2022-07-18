@@ -1,17 +1,31 @@
-﻿using Orleans;
+﻿using CardanoSharp.Koios.Sdk;
+using CardanoSharp.Koios.Sdk.Contracts;
+using Refit;
 
-namespace CardOrelans.Server.Services
+namespace CardanOrleans.Server.Services
 {
 
     public interface IGetTransactionsFromKois
     {
-        Task GetTransactions();
+        Task<Transaction> GetTransactions(string txHash);
     }
     public class GetTransactionsFromKois : IGetTransactionsFromKois
     {
-        public Task GetTransactions()
+        private readonly ITransactionClient  _transactionClient;
+
+        public GetTransactionsFromKois()
         {
-            throw new NotImplementedException();
+            _transactionClient = RestService.For<ITransactionClient>("https://api.koios.rest/api/v0");;
+        }
+
+        public async Task<Transaction> GetTransactions(string txHash)
+        {
+            var request = await _transactionClient.GetTransactionInformation(new GetTransactionRequest()
+            {
+                TxHashes = new List<string>() {txHash}
+            });
+
+            return request.Content.FirstOrDefault();
         }
     }
 }

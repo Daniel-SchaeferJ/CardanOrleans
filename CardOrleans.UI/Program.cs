@@ -1,11 +1,12 @@
-using Avalonia;
-using Avalonia.ReactiveUI;
-using Orleans;
-using Orleans.Configuration;
 using System;
 using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.ReactiveUI;
+using CardOrleans.UI;
+using Orleans;
+using Orleans.Configuration;
 
-namespace CardOrleans.UI
+namespace CardanOrleans.UI
 {
     internal class Program
     {

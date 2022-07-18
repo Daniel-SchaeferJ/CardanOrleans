@@ -1,9 +1,8 @@
-using CardanOrleans.Server;
-using CardOrelans.Server.Services;
-using Orleans;
-using Orleans.Configuration;
+using CardanOrleans.Server.Orleans;
+using CardanOrleans.Server.Services;
 using Orleans.Hosting;
-using System.Net;
+
+namespace CardanOrleans.Server;
 
 public class Program
 {
@@ -17,6 +16,7 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.AddTransient<IGetTransactionsFromKois, GetTransactionsFromKois>();
+        builder.Services.AddTransient<ITransactionGrain, TransactionGrain>();
         await StartSilo();
         builder.Services.AddSingleton<ClusterClientHostedService>();
         builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<ClusterClientHostedService>());
@@ -45,11 +45,12 @@ public class Program
     {
         // define the cluster configuration
         var host = new HostBuilder()
-           .UseOrleans(builder =>
-           {
-               builder.UseLocalhostClustering();
-               builder.AddMemoryGrainStorageAsDefault();
-               })
+            .UseOrleans(builder =>
+            {
+                builder.UseLocalhostClustering();
+                builder.AddMemoryGrainStorageAsDefault();
+                
+            })
             .Build();
 
         await host.StartAsync();
@@ -57,7 +58,3 @@ public class Program
     }
 
 }
-
-
-
-
