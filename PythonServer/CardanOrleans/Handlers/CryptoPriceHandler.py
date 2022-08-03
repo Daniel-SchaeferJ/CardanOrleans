@@ -1,9 +1,11 @@
-from flask import jsonify, Response, request, json
+from __main__ import app
+from flask import jsonify
 
-from CardanOrleans.Services.GetCryptoCurrencyPriceService import GetCryptoCurrencyPriceService
+from CardanOrleans.Services.GetCryptoCurrencyPriceService import GetAdaPrice
 
 
-class CryptoPriceHandler:
-    def get_current_price_of_ada(self):
-        price = jsonify({'price': GetCryptoCurrencyPriceService.GetAdaPrice(self)})
-        return price
+@app.route('/get-current-price-of-ada')
+@app.route('/')
+def get_current_price_of_ada():
+    price = jsonify({'price': GetAdaPrice()})
+    return price
